@@ -1,0 +1,3 @@
+Ustal rachunek zleceniodawcy (z_rachunku) i rachunek odbiorcy (na_rachunek) po etykietach lub sekcjach bankowego potwierdzenia. Krajowe rachunki wpisz jako ciąg dokładnie 26 cyfr, bez prefiksu PL, odstępów i myślników, zachowując wszystkie zera.
+
+Zwróć datę operacji lub realizacji przelewu w ISO YYYY-MM-DD. Użyj daty zlecenia tylko gdy brak daty operacji, realizacji lub księgowania. Pomiń datę wydruku lub wygenerowania PDF. Przepisz kwotę przelewu jako liczbę JSON z kropką dziesiętną, bez poniesionej prowizji. Przepisz pełny tytuł z pola przelewu, zachowując treść i oryginalne znaki. Numer transakcji to numer operacji, identyfikator bankowy albo numer referencyjny. Nie wyciągaj go z tytułu, gdy nie ma jawnego pola.

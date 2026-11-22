@@ -1,0 +1,70 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["OdwolanieKIO", "Odwolujacy", "Zamawiajacy", "ZamowieniePubliczne"],
+  "properties": {
+    "OdwolanieKIO": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["data", "czynnosc_dzien", "czynnosc_powod_id", "czynnosc_opis", "miejscowosc"],
+      "properties": {
+        "data": {"type": ["string", "null"], "format": "date"},
+        "czynnosc_dzien": {"type": ["string", "null"], "format": "date"},
+        "czynnosc_powod_id": {"type": ["integer", "null"], "minimum": 1, "maximum": 12},
+        "czynnosc_opis": {"type": ["string", "null"]},
+        "miejscowosc": {"type": ["string", "null"]}
+      }
+    },
+    "Odwolujacy": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["krs", "nazwa", "nip", "regon", "przez-pelnomocnika", "pelnomocnik"],
+        "properties": {
+          "krs": {"type": ["string", "null"], "pattern": "^\\d{10}$"},
+          "nazwa": {"type": ["string", "null"]},
+          "nip": {"type": ["string", "null"], "pattern": "^\\d{10}$"},
+          "regon": {"type": ["string", "null"], "pattern": "^\\d{9}(?:\\d{5})?$"},
+          "przez-pelnomocnika": {"enum": [0, 1, null]},
+          "pelnomocnik": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["imie_nazwisko", "nazwa", "mail"],
+            "properties": {
+              "imie_nazwisko": {"type": ["string", "null"]},
+              "nazwa": {"type": ["string", "null"]},
+              "mail": {"type": ["string", "null"], "format": "email"}
+            }
+          }
+        }
+      }
+    },
+    "Zamawiajacy": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["krs", "nazwa", "nip", "regon", "prowadzacy_postepowanie"],
+        "properties": {
+          "krs": {"type": ["string", "null"], "pattern": "^\\d{10}$"},
+          "nazwa": {"type": ["string", "null"]},
+          "nip": {"type": ["string", "null"], "pattern": "^\\d{10}$"},
+          "regon": {"type": ["string", "null"], "pattern": "^\\d{9}(?:\\d{5})?$"},
+          "prowadzacy_postepowanie": {"enum": [0, 1, null]}
+        }
+      }
+    },
+    "ZamowieniePubliczne": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["numer_bzp", "numer_postepowania", "numer_ted", "tytul"],
+      "properties": {
+        "numer_bzp": {"type": ["string", "null"], "pattern": "^\\d{4}/BZP\\d{8}(?:/\\d{2})?$"},
+        "numer_postepowania": {"type": ["string", "null"]},
+        "numer_ted": {"type": ["string", "null"], "pattern": "^\\d{5,7}-\\d{4}$"},
+        "tytul": {"type": ["string", "null"]}
+      }
+    }
+  }
+}

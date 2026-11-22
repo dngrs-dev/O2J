@@ -1,0 +1,26 @@
+x-o2j: &o2j
+  build: .
+  image: o2j:local
+  environment:
+    O2J_API_BASE: ${O2J_API_BASE:-}
+    O2J_API_KEY: ${O2J_API_KEY:-}
+    O2J_MODEL: ${O2J_MODEL:-}
+    O2J_TEMPERATURE: ${O2J_TEMPERATURE:-0}
+    O2J_API_TIMEOUT: ${O2J_API_TIMEOUT:-40}
+    O2J_OCR_LANG: ${O2J_OCR_LANG:-pol+eng}
+  user: "${O2J_UID:-1000}:${O2J_GID:-1000}"
+  volumes:
+    - ./config:/app/config:ro
+    - ./input:/app/input:ro
+    - ./output:/app/output
+
+services:
+  gui:
+    <<: *o2j
+    command: ["serve", "--host", "0.0.0.0"]
+    ports:
+      - "127.0.0.1:8765:8765"
+  batch:
+    <<: *o2j
+    profiles: ["batch"]
+    command: ["extract"]

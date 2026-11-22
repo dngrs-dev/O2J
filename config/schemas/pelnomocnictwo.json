@@ -1,0 +1,50 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["mocodawca", "pelnomocnicy"],
+  "properties": {
+    "mocodawca": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["data", "podpisujacy"],
+        "properties": {
+          "data": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["imie_nazwisko", "krs", "nazwa", "nip", "typ"],
+            "properties": {
+              "imie_nazwisko": {"type": ["string", "null"]},
+              "krs": {"type": ["string", "null"], "pattern": "^\\d{10}$"},
+              "nazwa": {"type": ["string", "null"]},
+              "nip": {"type": ["string", "null"], "pattern": "^\\d{10}$"},
+              "typ": {"enum": ["osoba_prawna", "osoba_fizyczna", null]}
+            }
+          },
+          "podpisujacy": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["imie_nazwisko"],
+              "properties": {"imie_nazwisko": {"type": ["string", "null"]}}
+            }
+          }
+        }
+      }
+    },
+    "pelnomocnicy": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["imie_nazwisko", "pesel"],
+        "properties": {
+          "imie_nazwisko": {"type": ["string", "null"]},
+          "pesel": {"type": ["string", "integer", "null"], "pattern": "^\\d{11}$", "minimum": 10000000000, "maximum": 99999999999}
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,8 @@
+**
+!Dockerfile
+!requirements.txt
+!config/
+!config/**
+!o2j/
+!o2j/**
+**/__pycache__

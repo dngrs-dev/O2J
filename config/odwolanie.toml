@@ -1,0 +1,26 @@
+id = "odwolanie"
+label = "Odwołanie do KIO"
+description = "Właściwe pismo wnoszące odwołanie od czynności lub zaniechania zamawiającego do KIO. Wyroki KIO, ogłoszenia o zamówieniu, podręczniki i odpowiedzi na odwołanie to inne dokumenty."
+schema = "schemas/odwolanie.json"
+prompt = "prompts/odwolanie.md"
+extractor = "appeal"
+minimum_score = 7
+
+[[signals]]
+pattern = '^\s*(?:o\s*d\s*w\s*o\s*[łl]\s*a\s*n\s*i\s*e)\s*(?:$|od\b|wobec\b|na\b|do\b)'
+weight = 7
+[[signals]]
+pattern = '\bwnos(?:zę|ze|imy)\s+(?:niniejsze\s+)?odwo[łl]anie\b'
+weight = 5
+[[signals]]
+pattern = '^\s*odwo[łl]uj[ąa]c[yaei]\s*[:\-]'
+weight = 3
+[[signals]]
+pattern = '^\s*zamawiaj[ąa]c[yaei]\s*[:\-]'
+weight = 3
+[[signals]]
+pattern = '\b(?:prezes\w*\s+krajowej\s+izby\s+odwo[łl]awczej|art\.?\s*513)\b'
+weight = 2
+[[signals]]
+pattern = '^\s*(?:wyrok\b|postanowienie\b|odpowied[źz]\s+na\s+odwo[łl]anie\b|zg[łl]oszenie\s+przyst[ąa]pienia\b|sprzeciw\b|cofni[ęe]cie\s+odwo[łl]ania\b)'
+weight = -20

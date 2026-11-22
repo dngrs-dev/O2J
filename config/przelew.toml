@@ -1,0 +1,26 @@
+id = "przelew"
+label = "Potwierdzenie przelewu"
+description = "Bankowe potwierdzenie operacji przelewu, z danymi płatności. Sama wzmianka o opłacie lub numer rachunku w innym dokumencie jest niewystarczająca."
+schema = "schemas/przelew.json"
+prompt = "prompts/przelew.md"
+extractor = "transfer"
+minimum_score = 7
+
+[[signals]]
+pattern = '\b(?:(?:potwierdzenie|dow[oó]d)\s+(?:(?:wykonania|realizacji|z[łl]o[żz]enia|zaksi[ęe]gowania)\s+)?(?:(?:polecenia\s+)?przelewu|transakcji|operacji)|polecenie\s+przelewu)\b'
+weight = 6
+[[signals]]
+pattern = '\b(?:rachunek|konta?)\s+(?:odbiorcy|nadawcy|beneficjenta|zleceniodawcy|kontrahenta|obci[ąa][żz]any)\b'
+weight = 3
+[[signals]]
+pattern = '\b(?:kwota|warto[śs][ćc]|amount)\s*[:.\s]+(?:operacji|transakcji|przelewu|\d|PLN)'
+weight = 2
+[[signals]]
+pattern = '\b(?:data\s+(?:operacji|wykonania|realizacji|ksi[ęe]gowania|waluty|transakcji)|z\s+rachunku|na\s+rachunek)\b'
+weight = 2
+[[signals]]
+pattern = '\b(?:przelew\s+(?:krajowy|z\s+rachunku|elixir)|transakcja\s+z[łlt]o[żz]ona\s+poprzez\s+(?:us[łl]ugi|system))\b'
+weight = 5
+[[signals]]
+pattern = '(?s)\bdane\s+(?:nadawcy|zleceniodawcy)\b.{0,650}\bdane\s+(?:odbiorcy|kontrahenta)\b'
+weight = 3

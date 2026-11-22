@@ -1,0 +1,20 @@
+id = "pelnomocnictwo"
+label = "Pełnomocnictwo"
+description = "Dokument udzielający pełnomocnictwa konkretnej osobie lub osobom, wskazujący mocodawcę i osoby podpisujące. Sama wzmianka o pełnomocnictwie w odwołaniu lub przelewie jest niewystarczająca."
+schema = "schemas/pelnomocnictwo.json"
+prompt = "prompts/pelnomocnictwo.md"
+extractor = "power"
+minimum_score = 6
+
+[[signals]]
+pattern = '^\s*p\s*e\s*[łl]\s*n\s*o\s*m\s*o\s*c\s*n\s*i\s*c\s*t\s*w\s*o\s*(?:$|procesowe|og[oó]lne|szczeg[oó]lne|do\b|z\s+dnia)'
+weight = 7
+[[signals]]
+pattern = '\b(?:udziel(?:am|amy|a|aj[ąa])\s+(?:niniejszym\s+)?(?:pe[łl]nomocnictwa|niniejszego\s+pe[łl]nomocnictwa)|ustanawi(?:am|amy)\s+pe[łl]nomocnikiem|niniejszym\s+upowa[żz]niam)\b'
+weight = 4
+[[signals]]
+pattern = '^\s*(?:§\s*\d+\.\s*)?mocodawc(?:a|y|[ąa])\b'
+weight = 3
+[[signals]]
+pattern = '^\s*(?:§\s*\d+\.\s*)?pe[łl]nomocni(?:k|cy)\b'
+weight = 2

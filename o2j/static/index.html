@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Odwołania2JSON</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark" aria-hidden="true">{ }</span> <span>Odwołania<span class="brand-accent">2JSON</span></span></div>
+    <span class="mode" id="mode"><span></span> Sprawdzanie trybu</span>
+  </header>
+  <main>
+    <div class="intro">
+      <h1>Analiza dokumentów KIO</h1>
+      <p id="classes">Odwołanie do KIO · Pełnomocnictwo · Potwierdzenie przelewu</p>
+    </div>
+    <section class="upload" id="drop" aria-label="Wczytywanie PDF">
+      <span class="upload-mark" aria-hidden="true">↑</span>
+      <div class="upload-text">
+        <strong id="file-name">Dodaj dokument PDF</strong>
+        <span id="file-detail">Przeciągnij tutaj lub wybierz plik · do 50 MB</span>
+      </div>
+      <div class="actions">
+        <input id="file" type="file" accept=".pdf,application/pdf" class="visually-hidden" aria-label="Wybierz dokument PDF" tabindex="-1">
+        <button id="pick" type="button" class="button" aria-controls="file">Wybierz PDF</button>
+        <button id="run" type="button" class="button button-primary" disabled>Analizuj <span aria-hidden="true">→</span></button>
+      </div>
+    </section>
+    <p class="status" id="status" role="status" aria-live="polite"></p>
+    <div class="workspace">
+      <section class="panel" aria-labelledby="source-title">
+        <div class="panel-head">
+          <div class="panel-heading"><span class="panel-icon paper" aria-hidden="true"></span><h2 id="source-title">Dokument źródłowy</h2></div>
+          <div id="preview-controls" class="preview-controls" hidden>
+            <button type="button" id="prev" class="button button-small" aria-label="Poprzednia strona">‹</button>
+            <span id="page-count" class="meta" aria-live="polite"></span>
+            <button type="button" id="next" class="button button-small" aria-label="Następna strona">›</button>
+            <a id="open-pdf" class="button button-small" target="_blank" rel="noopener">Otwórz PDF</a>
+          </div>
+        </div>
+        <div class="preview">
+          <div class="placeholder" id="pdf-empty">
+            <span class="placeholder-mark paper" aria-hidden="true"></span>
+            <strong id="preview-message">Podgląd PDF</strong>
+            <span id="preview-hint">Wybierz dokument, aby wyświetlić go tutaj.</span>
+          </div>
+          <div class="preview-scroll" id="preview-scroll" hidden><img id="pdf" alt="Strona dokumentu PDF"></div>
+        </div>
+      </section>
+      <section class="panel" aria-labelledby="result-title">
+        <div class="panel-head">
+          <div class="panel-heading"><span class="panel-icon code-icon" aria-hidden="true">{ }</span><h2 id="result-title">Wynik ekstrakcji</h2></div>
+          <div class="result-actions" aria-label="Działania na wyniku">
+            <button id="copy" type="button" class="button button-small" disabled>Kopiuj</button>
+            <button id="download" type="button" class="button button-small" disabled>Pobierz JSON</button>
+          </div>
+        </div>
+        <div class="result-body">
+          <div class="placeholder" id="json-empty">
+            <span class="placeholder-mark code-icon" aria-hidden="true">{ }</span>
+            <strong>Tutaj pojawi się JSON</strong>
+            <span>Uruchom analizę, aby wyodrębnić dane.</span>
+          </div>
+          <div id="result" hidden>
+            <div class="summary"><strong id="result-class"></strong><span id="result-time"></span></div>
+            <pre id="json" tabindex="0" aria-label="Wygenerowany JSON"></pre>
+            <details id="trace">
+              <summary>Ślad ekstrakcji</summary>
+              <p id="trace-meta" class="trace-meta"></p>
+              <ul id="warnings"></ul>
+              <ul id="evidence"></ul>
+            </details>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>
