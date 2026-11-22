@@ -163,7 +163,7 @@ def action(text: str) -> tuple[int | None, str | None]:
     heading = re.search(r'(?im)^\s*(?:zarzut(?:\s+nr)?\s+1\b|pierwszy zarzut\b)', text)
     opening = text[:heading.start()] if heading else text[:10000]
     dated = re.finditer(rf'(?is)(?:zamawiaj[ąa]cy|o czym|informacj\w+\s+o)\s+(?:[^\n]{{0,50}}?\s+)?'
-                         rf'(?:w\s+dniu|z\s+dnia|dnia)\s+({DATE})(.{{0,220}}?)(?=\.\s+(?:[A-ZĄĆĘŁŃÓŚŹŻ]|\n)|\n|$)',
+                         rf'(?:w\s+dniu|z\s+dnia|dnia)\s+({DATE})(.{{0,220}}?)(?=\.\s+(?-i:[A-ZĄĆĘŁŃÓŚŹŻ])|\n|$)',
                          opening)
     for match in dated:
         candidate = reason(match[2])

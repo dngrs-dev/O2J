@@ -12,7 +12,7 @@ from o2j.config import load_classes
 from o2j.model import ModelError
 from o2j.pdf import Document, Page, PdfReader
 from o2j.pipeline import Pipeline
-from o2j.text import clean
+from o2j.text import clean, clean_ocr
 
 
 TRANSFER = """POTWIERDZENIE WYKONANIA PRZELEWU
@@ -162,6 +162,62 @@ Dokument wygenerowano elektronicznie
             'tytul': 'Wpis od odwołania ZP-55', 'z_rachunku': '02908100000001000200030004',
             'na_rachunek': '13908100000001000200030005',
         })
+
+    def test_ambiguous_ocr_amount_is_not_interpreted_as_an_integer(self):
+        for raw, expected in (
+            ('1 463 25', None), ('1 463,25', 1463.25), ('1.463,25', 1463.25),
+            ('1,463.25', 1463.25), ('146325', 146325.0),
+        ):
+            with self.subTest(raw=raw):
+                result = self.pipeline.analyze(document(TRANSFER.replace('1 735,50', raw)))
+                self.assertEqual(result.data['przelew_bankowy']['kwota'], expected)
+
+    def test_ocr_retry_can_recover_an_unclassified_scan(self):
+        class Reader:
+            def read(self, source):
+                return Document((Page(1, 'W3VINZ0d', 'ocr'),), 1, ())
+
+            def retry(self, source, number, method):
+                return Page(number, clean(TRANSFER), 'ocr', method)
+
+        pipeline = Pipeline(self.pipeline.classes, Reader())
+        result = pipeline.process(b'scan', trace=True)
+        self.assertEqual(result.class_id, 'przelew')
+        self.assertEqual(result.ocr_retries, 1)
+        self.assertEqual(result.pages[0]['ocr_method'], 'rotate_180')
+        self.assertEqual(result.data['przelew_bankowy']['kwota'], 1735.50)
+
+    def test_ocr_retry_retains_existing_values(self):
+        class Reader:
+            def read(self, source):
+                text = TRANSFER.replace('Data realizacji: 10.07.2026\n', '')
+                return Document((Page(1, clean(text), 'ocr'),), 1, ())
+
+            def retry(self, source, number, method):
+                text = TRANSFER.replace('1 735,50', '1 785,50') if method == 'deskew' else TRANSFER
+                return Page(number, clean(text), 'ocr', method)
+
+        pipeline = Pipeline(self.pipeline.classes, Reader())
+        result = pipeline.process(b'scan')
+        self.assertEqual(result.ocr_retries, 2)
+        self.assertEqual(result.pages[0]['ocr_method'], 'single_block')
+        self.assertEqual(result.data['przelew_bankowy']['kwota'], 1735.50)
+        self.assertEqual(result.data['przelew_bankowy']['data_operacji'], '2026-07-10')
+
+    def test_scan_normalization_and_year_abbreviation(self):
+        text = clean_ocr("""ODWOŁANIE
+Odwołujący: Dostawca Promień SA.
+reprezentowany przez: adw. Anna Maj
+E-mail: anna @ kancelaria.example
+Zamawiający: Gmina Dobrze
+Zamawiający w dniu 18 maja 2026 r. zmodyfikował treść SWZ.
+Zarzut nr 1 dotyczy opublikowanych zmian.
+""")
+        data = self.pipeline.analyze(document(text)).data
+        self.assertEqual(data['OdwolanieKIO']['czynnosc_dzien'], '2026-05-18')
+        self.assertEqual(data['OdwolanieKIO']['czynnosc_powod_id'], 5)
+        self.assertEqual(data['Odwolujacy'][0]['nazwa'], 'Dostawca Promień S.A.')
+        self.assertEqual(data['Odwolujacy'][0]['pelnomocnik']['mail'], 'anna@kancelaria.example')
 
     def test_negative_document_produces_zero_bytes(self):
         result = self.pipeline.analyze(document('WYROK\nKrajowa Izba Odwoławcza oddala odwołanie w całości.'))

@@ -47,6 +47,8 @@ python -m o2j extract --input dokument.pdf --output output --trace-dir trace
 python -m o2j extract --help
 ~~~
 
+Ponowny OCR trudnych skanów jest domyślnie włączony. Parametr --no-ocr-retry umożliwia porównanie z pojedynczym przebiegiem OCR.
+
 Po uruchomieniu polecenia python -m o2j serve otwórz przeglądarkę pod adresem http://127.0.0.1:8765. Wybierz PDF lub przeciągnij go do aplikacji i wybierz **Analizuj**. Interfejs wyświetla PDF obok JSON, umożliwia przejście do stron zawierających odnalezione pola oraz kopię i pobranie wyniku.
 
 ## Tryb hybrydowy i wybór modelu
@@ -75,4 +77,4 @@ python -m unittest discover -s tests -v
 
 Benchmark pokazuje mikro-F1 dla niepustych wartości według dokładnej ścieżki i wartości JSON, klasyfikację, liczbę pełnych dopasowań i czas. Pary dokumentów oraz referencji dobierane są w benchmarku, w tym udokumentowana rozbieżność nazw w publicznym zbiorze przelewów. Ocena na niejawnym zbiorze i dokładny sposób liczenia F1 przez organizatora pozostają odrębną walidacją.
 
-[Wyniki benchmarku](docs/wyniki.md) · [Architektura i dodawanie klas](docs/architektura.md)
+[Walidacja ponownego OCR](docs/ocr-validation.md) · [Wyniki wersji bazowej](docs/wyniki.md) · [Architektura i dodawanie klas](docs/architektura.md)

@@ -1,6 +1,6 @@
 # Architektura Odwołania2JSON
 
-1. **PDF i OCR.** PDFium odczytuje warstwę tekstową. Tesseract z modelami pol i eng odczytuje obraz stron, których tekst jest zbyt krótki lub uszkodzony. Domyślnie aplikacja czyta do 12 stron od początku i dwie końcowe. Limit OCR to 5 stron na dokument i można go zmienić parametrem --ocr-pages. Skanowanie stron jest ograniczone czasowo. Wynik wskazuje wykorzystane strony.
+1. **PDF i OCR.** PDFium odczytuje warstwę tekstową. Tesseract z modelami pol i eng odczytuje obraz stron, których tekst jest zbyt krótki lub uszkodzony. Domyślnie aplikacja czyta do 12 stron od początku i dwie końcowe. Limit OCR to 5 stron na dokument i można go zmienić parametrem --ocr-pages. Brak rozpoznanej klasy lub istotnego pola może uruchomić maksymalnie dwie dodatkowe próby na wybranej stronie, z poprawą kontrastu, korektą pochylenia, inną segmentacją lub obrotem o 180°. W rozpoznanym dokumencie druga próba uzupełnia brakujące dane tylko wtedy, gdy potwierdza dotychczasowe wartości. Wynik wskazuje wykorzystane strony i zaakceptowaną metodę OCR.
 2. **Klasyfikacja.** Wagi sygnałów z plików config/*.toml są sumowane dla pierwszych dwóch stron. Minimalny wynik i rozstrzygnięcie remisu pomagają odrzucać dokumenty bez wystarczających sygnałów. W trybie hybrydowym model rozstrzyga niejednoznaczne przypadki na podstawie opisów klas.
 3. **Ekstrakcja.** Lokalne reguły rozpoznają role, etykiety, daty, identyfikatory oraz pierwszy zaskarżony zarzut. Opcjonalny model dostaje instrukcję właściwej klasy, schemat oraz ograniczony fragment treści PDF. W przypadku niedostępności modelu działa wynik reguł.
 4. **Walidacja.** JSON Schema sprawdza kształt wyniku, daty i rodzaje identyfikatorów. Brak wartości jest reprezentowany przez null lub pustą listę zgodnie z konfiguracją. Numery kont są ciągami 26 cyfr. PESEL jako ciąg cyfr zachowuje zera wiodące i odpowiada publicznym referencjom. Schemat akceptuje również liczbę 11-cyfrową pokazaną w przykładzie UZP.
@@ -31,6 +31,8 @@ weight = 8
 ~~~
 
 Dodając pole do istniejącej klasy, zaktualizuj jej schemat i prompt. Gdy etykieta jest stabilna, przypisz pole również w sekcji fields. Test test_new_class_and_field_need_configuration_only sprawdza całą ścieżkę dla nowej klasy skonfigurowanej bez zmian w silniku.
+
+Opcjonalna lista review_fields wskazuje pola istotne podczas ponownego OCR. Użyj ścieżek z kropkami. Liczba w ścieżce oznacza pozycję w tablicy, np. mocodawca.0.data.typ. Umieść na liście pola, które zwykle są obecne w danej klasie dokumentów.
 
 ## Komponenty zewnętrzne
 

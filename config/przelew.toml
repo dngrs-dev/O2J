@@ -5,6 +5,10 @@ schema = "schemas/przelew.json"
 prompt = "prompts/przelew.md"
 extractor = "transfer"
 minimum_score = 7
+review_fields = [
+    "przelew_bankowy.data_operacji", "przelew_bankowy.kwota", "przelew_bankowy.na_rachunek",
+    "przelew_bankowy.tytul", "przelew_bankowy.z_rachunku",
+]
 
 [[signals]]
 pattern = '\b(?:(?:potwierdzenie|dow[oó]d)\s+(?:(?:wykonania|realizacji|z[łl]o[żz]enia|zaksi[ęe]gowania)\s+)?(?:(?:polecenia\s+)?przelewu|transakcji|operacji)|polecenie\s+przelewu)\b'

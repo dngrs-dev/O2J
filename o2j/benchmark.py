@@ -59,6 +59,8 @@ def benchmark(dataset: Path, pipeline: Pipeline, jobs: int) -> dict:
     errors = []
     warning_counts = Counter()
     num_ocr = 0
+    retries = 0
+    rescued = 0
     exact = 0
     started = perf_counter()
 
@@ -77,6 +79,8 @@ def benchmark(dataset: Path, pipeline: Pipeline, jobs: int) -> dict:
                 errors.append({'file': path.relative_to(dataset).as_posix(), 'error': error})
             if result:
                 num_ocr += any(page['source'] == 'ocr' for page in result.pages)
+                retries += result.ocr_retries
+                rescued += any(page.get('ocr_method') for page in result.pages)
                 warning_counts.update(result.warnings)
             actual = result.data if result and result.data is not None else {}
             actual_class = (result.class_id or NEGATIVE) if result else 'błąd'
@@ -95,6 +99,8 @@ def benchmark(dataset: Path, pipeline: Pipeline, jobs: int) -> dict:
         'fields_by_class': {key: count.metrics() for key, count in sorted(per_class.items())},
         'fields_by_group': {key: count.metrics() for key, count in sorted(per_group.items())},
         'documents_with_ocr': num_ocr,
+        'ocr_retry_calls': retries,
+        'documents_using_ocr_retry': rescued,
         'seconds': round(perf_counter() - started, 2),
         'processing_errors': errors,
         'warnings': dict(warning_counts),

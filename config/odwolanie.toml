@@ -5,6 +5,10 @@ schema = "schemas/odwolanie.json"
 prompt = "prompts/odwolanie.md"
 extractor = "appeal"
 minimum_score = 7
+review_fields = [
+    "OdwolanieKIO.data", "OdwolanieKIO.czynnosc_dzien", "OdwolanieKIO.czynnosc_powod_id", "Odwolujacy.0.nazwa",
+    "Zamawiajacy.0.nazwa", "ZamowieniePubliczne.numer_postepowania", "ZamowieniePubliczne.tytul",
+]
 
 [[signals]]
 pattern = '^\s*(?:o\s*d\s*w\s*o\s*[łl]\s*a\s*n\s*i\s*e)\s*(?:$|od\b|wobec\b|na\b|do\b)'

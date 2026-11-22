@@ -1,7 +1,7 @@
 """Coordinate content classification, extraction, validation and provenance."""
 
 from collections.abc import Iterator
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 import json
 import math
 from pathlib import Path
@@ -33,12 +33,20 @@ class Result:
     evidence: dict[str, dict]
     warnings: tuple[str, ...]
     seconds: float
+    ocr_retries: int = 0
 
     def as_dict(self) -> dict:
         return asdict(self)
 
     def json(self) -> str:
         return json.dumps(self.data, ensure_ascii=False, indent=2, allow_nan=False) + '\n' if self.data is not None else ''
+
+
+@dataclass(frozen=True)
+class RuleAssessment:
+    key: str | None
+    scores: dict[str, int]
+    data: dict | None
 
 
 def classify(document: Document, classes: dict[str, DocumentClass]) -> tuple[str | None, dict[str, int]]:
@@ -172,11 +180,24 @@ def evidence_for(data: dict | None, document: Document) -> dict[str, dict]:
     return evidence
 
 
+def has_field(value, path: str) -> bool:
+    for part in path.split('.'):
+        if isinstance(value, list) and part.isascii() and part.isdecimal() and int(part) < len(value):
+            value = value[int(part)]
+        elif isinstance(value, dict):
+            value = value.get(part)
+        else:
+            return False
+    return value is not None and value != '' and value != []
+
+
 class Pipeline:
-    def __init__(self, classes: dict[str, DocumentClass], reader: PdfReader, model: ModelClient | None = None):
+    def __init__(self, classes: dict[str, DocumentClass], reader: PdfReader, model: ModelClient | None = None,
+                 *, retry_ocr: bool = True):
         self.classes = classes
         self.reader = reader
         self.model = model
+        self.retry_ocr = retry_ocr
         for spec in classes.values():
             if spec.extractor and spec.extractor not in EXTRACTORS:
                 raise ValueError(f'Nieznany ekstraktor w klasie {spec.id}: {spec.extractor}')
@@ -184,11 +205,76 @@ class Pipeline:
     def process(self, source: Path | bytes, *, trace: bool = False) -> Result:
         started = perf_counter()
         document = self.reader.read(source)
-        return self.analyze(document, trace=trace, started=started)
+        assessment = self.assess(document)
+        retries = 0
+        if self.retry_ocr:
+            document, assessment, retries = self.retry_scan(source, document, assessment)
+        return self.analyze(document, trace=trace, started=started, assessment=assessment, ocr_retries=retries)
 
-    def analyze(self, document: Document, *, trace: bool = False, started: float | None = None) -> Result:
-        started = perf_counter() if started is None else started
+    def rule_data(self, key: str, text: str) -> dict:
+        spec = self.classes[key]
+        baseline = EXTRACTORS[spec.extractor](text) if spec.extractor else {}
+        configured_fields(text, spec, baseline)
+        return conform(baseline, None, spec.schema, spec.validator)
+
+    def assess(self, document: Document) -> RuleAssessment:
         key, scores = classify(document, self.classes)
+        return RuleAssessment(key, scores, self.rule_data(key, document.text) if key else None)
+
+    def missing_fields(self, assessment: RuleAssessment) -> tuple[str, ...]:
+        if not assessment.key:
+            return ()
+        return tuple(path for path in self.classes[assessment.key].review_fields if not has_field(assessment.data, path))
+
+    def improved(self, baseline: RuleAssessment, candidate: RuleAssessment) -> bool:
+        if not candidate.key or not self.classes[candidate.key].validator.is_valid(candidate.data):
+            return False
+        if not baseline.key:
+            paths = self.classes[candidate.key].review_fields
+            if paths:
+                coverage = len(paths) - len(self.missing_fields(candidate))
+                return coverage >= min(2, len(paths))
+            return bool(next(scalar_fields(candidate.data), None))
+        if candidate.key != baseline.key or len(self.missing_fields(candidate)) >= len(self.missing_fields(baseline)):
+            return False
+        # A different OCR transcript may fill gaps only when all known values agree.
+        return set(scalar_fields(baseline.data)) <= set(scalar_fields(candidate.data))
+
+    def retry_scan(self, source: Path | bytes, document: Document, baseline: RuleAssessment
+                   ) -> tuple[Document, RuleAssessment, int]:
+        scanned = [page for page in document.pages if page.source == 'ocr']
+        if not scanned:
+            return document, baseline, 0
+        missing = self.missing_fields(baseline)
+        if baseline.key and not missing:
+            return document, baseline, 0
+        if not baseline.key and (scanned[0].number > 2 or any(score <= -10 for score in baseline.scores.values())):
+            return document, baseline, 0
+        signer_only = missing and all('.podpisujacy.' in path for path in missing)
+        number = (scanned[-1] if signer_only else scanned[0]).number
+        methods = ('deskew', 'single_block') if baseline.key else ('rotate_180', 'deskew')
+        attempts = 0
+        for method in methods:
+            attempts += 1
+            try:
+                corrected = self.reader.retry(source, number, method)
+            except DocumentError:
+                continue
+            if not usable(corrected.text):
+                continue
+            candidate_document = replace(document, pages=tuple(
+                corrected if page.number == number else page for page in document.pages
+            ))
+            candidate = self.assess(candidate_document)
+            if self.improved(baseline, candidate):
+                return candidate_document, candidate, attempts
+        return document, baseline, attempts
+
+    def analyze(self, document: Document, *, trace: bool = False, started: float | None = None,
+                assessment: RuleAssessment | None = None, ocr_retries: int = 0) -> Result:
+        started = perf_counter() if started is None else started
+        assessment = assessment or self.assess(document)
+        key, scores, data = assessment.key, assessment.scores, assessment.data
         warnings = list(document.warnings)
         text = document.text
         engine = 'rules'
@@ -196,14 +282,12 @@ class Pipeline:
             try:
                 key = self.model.classify(self.classes, source_context(document, 6000, include_tail=False))
                 engine = self.model.model
+                if key:
+                    data = self.rule_data(key, text)
             except ModelError as exc:
                 warnings.append(str(exc))
-        data = None
         if key:
             spec = self.classes[key]
-            baseline = EXTRACTORS[spec.extractor](text) if spec.extractor else {}
-            configured_fields(text, spec, baseline)
-            data = conform(baseline, None, spec.schema, spec.validator)
             # A complete labelled bank form needs no inference.
             transfer_data = data.get('przelew_bankowy', {})
             complete_transfer = spec.extractor == 'transfer' and all(
@@ -225,6 +309,7 @@ class Pipeline:
                 raise DocumentError(f'Nie udało się zbudować poprawnego wyniku dla klasy {key}.')
         return Result(key, self.classes[key].label if key else 'Poza obsługiwanymi klasami',
                       data, engine, scores,
-                      tuple({'number': p.number, 'source': p.source, 'characters': len(p.text)} for p in document.pages),
+                      tuple({'number': p.number, 'source': p.source, 'characters': len(p.text),
+                             'ocr_method': p.ocr_method} for p in document.pages),
                       document.total_pages, evidence_for(data, document) if trace else {},
-                      tuple(warnings), perf_counter() - started)
+                      tuple(warnings), perf_counter() - started, ocr_retries)

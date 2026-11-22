@@ -5,6 +5,10 @@ schema = "schemas/pelnomocnictwo.json"
 prompt = "prompts/pelnomocnictwo.md"
 extractor = "power"
 minimum_score = 6
+review_fields = [
+    "mocodawca.0.data.typ", "mocodawca.0.podpisujacy.0.imie_nazwisko",
+    "pelnomocnicy.0.imie_nazwisko",
+]
 
 [[signals]]
 pattern = '^\s*p\s*e\s*[łl]\s*n\s*o\s*m\s*o\s*c\s*n\s*i\s*c\s*t\s*w\s*o\s*(?:$|procesowe|og[oó]lne|szczeg[oó]lne|do\b|z\s+dnia)'

@@ -1,4 +1,6 @@
-# Wyniki benchmarku
+# Wyniki benchmarku wersji v0.1.0-baseline
+
+Porównanie z późniejszą wersją znajduje się w [walidacji ponownego OCR](ocr-validation.md).
 
 Pomiar lokalny na publicznym korpusie UZP z commita eadffbce531eeac876d0f7e62c1cc6e857b05796. Korpus zawiera 226 PDF, w tym 30 plików w katalogu skany i 16 dokumentów spoza zakresu. Pomiar wykonano na Windows z Pythonem 3.13.17, Tesseractem 5.5.3 i sześcioma pracownikami CLI, w trybie rules na CPU. [Korpus UZP](https://github.com/Urzad-Zamowien-Publicznych/hacknation-2026/tree/eadffbce531eeac876d0f7e62c1cc6e857b05796/dane)
 

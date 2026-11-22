@@ -31,8 +31,10 @@ def clean_ocr(text: str) -> str:
     text = clean(text)
     text = re.sub(r'(?im)^[ \t]*[.‘’…„“”"©*•_~;|]+[ \t]*(?=[^\W\d_])', '', text)
     text = re.sub(r'(?i)(\bsp\.\s+)[zZ]\s+[o0]\.\s*[o0]\.', r'\1z o.o.', text)
+    text = re.sub(r'(?<!\S)SA\.(?=$|[\s,;])', 'S.A.', text)
     text = re.sub(
-        r'(?im)(\be-?mail\s*:[ \t]*)((?:[a-z][ .])?[a-z0-9._+-]+)[Q@]([a-z0-9-]+(?:\.[a-z0-9-]+)+)\b',
+        r'(?im)(\be-?mail\s*:[ \t]*)((?:[a-z][ .])?[a-z0-9._+-]+)[ \t]*(?:(?-i:Q)|@)[ \t]*'
+        r'([a-z0-9-]+(?:\.[a-z0-9-]+)+)\b',
         lambda m: m[1] + m[2].replace(' ', '.') + '@' + m[3], text,
     )
     return text

@@ -119,9 +119,11 @@ function showResult(result) {
   $("result-time").textContent = result.seconds.toFixed(2).replace(".", ",") + " s";
   $("json").replaceChildren(state.json ? syntaxHighlight(state.json) : document.createTextNode("Pusty plik .json"));
   const ocrPages = result.pages.filter((page) => page.source === "ocr").map((page) => page.number);
+  const recovered = result.pages.filter((page) => page.ocr_method).map((page) => page.number);
   const engine = result.engine === "rules" ? "reguły lokalne" : result.engine;
   $("trace-meta").textContent = "Ekstrakcja · " + engine + " · "
-    + (ocrPages.length ? "OCR stron " + ocrPages.join(", ") : "warstwa tekstowa PDF");
+    + (ocrPages.length ? "OCR stron " + ocrPages.join(", ") : "warstwa tekstowa PDF")
+    + (recovered.length ? " · ponowny OCR stron " + recovered.join(", ") : "");
   $("warnings").replaceChildren(...result.warnings.map((message) => {
     const item = document.createElement("li");
     item.textContent = message;

@@ -22,6 +22,8 @@ END = '|'.join((SOURCE, DESTINATION, AMOUNT, *DATE_LABELS, REFERENCE,
                 r's[i:]gnature\b|numer\s+\d+\s*\ntransakcji\b'))
 FIELD_SEPARATOR = r'(?:[ \t]*[:|>–-][ \t]*|[ \t]+|\n)[ \t|>:.–-]*'
 DECIMAL = r'((?:[+-]\s*)?\d(?:[\d .]*\d)?[,\.]\d{2})'
+MONEY = re.compile(r'(?P<whole>\d+|\d{1,3}(?P<group>[ .,])\d{3}(?:(?P=group)\d{3})*)'
+                   r'(?P<fraction>[,.]\d{1,2})?')
 
 
 def field(text: str, label: str, value: str) -> str | None:
@@ -51,11 +53,13 @@ def amount(text: str) -> float | None:
              or captured(rf'^(?:[^\n]*?\s)?{DECIMAL}\s*(?:PLN|z[łl])\b', text))
     if not value:
         return None
-    value = value.replace(' ', '').lstrip('+-')
-    decimals = re.search(r'[,.](\d{1,2})$', value)
-    if decimals:
-        return float(re.sub(r'[,.]', '', value[:decimals.start()]) + '.' + decimals[1])
-    return float(re.sub(r'[,.]', '', value))
+    match = MONEY.fullmatch(value.lstrip('+- '))
+    if not match:
+        # OCR can turn a decimal comma into a space. Invalid groups are ambiguous.
+        return None
+    whole = re.sub(r'[ .,]', '', match['whole'])
+    fraction = (match['fraction'] or '').replace(',', '.')
+    return float(whole + fraction)
 
 
 def transfer_title(text: str) -> str | None:

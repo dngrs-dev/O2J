@@ -100,6 +100,7 @@ def parser() -> argparse.ArgumentParser:
     common.add_argument('--engine', choices=('auto', 'rules', 'hybrid'), default='auto',
                         help='auto wybiera model tylko przy skonfigurowanym API')
     common.add_argument('--ocr-pages', type=positive, default=5, help='limit stron OCR na dokument')
+    common.add_argument('--no-ocr-retry', action='store_true', help='wyłącz dodatkowy OCR trudnych skanów')
     cli = argparse.ArgumentParser(prog='python -m o2j', description='Odwołania2JSON | PDF do JSON')
     sub = cli.add_subparsers(dest='command')
     batch = sub.add_parser('extract', parents=[common], help='przetwórz plik PDF lub katalog')
@@ -107,8 +108,8 @@ def parser() -> argparse.ArgumentParser:
     batch.add_argument('--output', '-o', type=Path, default=ROOT / 'output')
     batch.add_argument('--trace-dir', type=Path)
     batch.add_argument('--jobs', type=positive, default=min(4, os.cpu_count() or 1))
-    bench = sub.add_parser('benchmark', parents=[common], help='oceń na publicznym korpusie UZP')
-    bench.add_argument('dataset', type=Path, help='ścieżka do katalogu dane organizatora')
+    bench = sub.add_parser('benchmark', parents=[common], help='oceń na oznaczonym zbiorze PDF i JSON')
+    bench.add_argument('dataset', type=Path, help='katalog PDF z referencjami JSON')
     bench.add_argument('--report', type=Path, help='zapisz zagregowany raport JSON')
     bench.add_argument('--jobs', type=positive, default=min(4, os.cpu_count() or 1))
     web = sub.add_parser('serve', parents=[common], help='otwórz lokalny interfejs przeglądarkowy')
@@ -125,7 +126,8 @@ def main(argv: list[str] | None = None) -> int:
     cli = parser()
     args = cli.parse_args(arguments)
     try:
-        pipeline = Pipeline(load_classes(args.config), PdfReader.from_env(args.ocr_pages), ModelClient.from_env(args.engine))
+        pipeline = Pipeline(load_classes(args.config), PdfReader.from_env(args.ocr_pages),
+                            ModelClient.from_env(args.engine), retry_ocr=not args.no_ocr_retry)
         if args.command == 'extract':
             return extract(args, pipeline)
         if args.command == 'benchmark':

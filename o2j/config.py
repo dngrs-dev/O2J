@@ -29,6 +29,7 @@ class DocumentClass:
     minimum_score: int
     extractor: str | None
     fields: dict[str, re.Pattern]
+    review_fields: tuple[str, ...] = ()
 
     @property
     def schema(self) -> dict:
@@ -53,6 +54,7 @@ def load_classes(directory: Path = DEFAULT_CONFIG) -> dict[str, DocumentClass]:
             tuple(Signal(re.compile(s['pattern'], re.I | re.M), s['weight']) for s in cfg.get('signals', [])),
             cfg.get('minimum_score', 1), cfg.get('extractor'),
             {name: re.compile(pattern, re.I | re.M) for name, pattern in cfg.get('fields', {}).items()},
+            tuple(cfg.get('review_fields', [])),
         )
         for field, pattern in classes[key].fields.items():
             if pattern.groups != 1 or any(not part for part in field.split('.')):
